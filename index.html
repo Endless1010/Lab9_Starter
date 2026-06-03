@@ -88,20 +88,178 @@
   </main>
 
   <script>
-    let form = document.querySelector('form');
+    // ── Custom Error Classes ──────────────────────────────────────────────────
+
+    class ValidationError extends Error {
+      constructor(message) {
+        super(message);
+        this.name = 'ValidationError';
+      }
+    }
+
+    class DivisionByZeroError extends Error {
+      constructor() {
+        super('Cannot divide by zero');
+        this.name = 'DivisionByZeroError';
+      }
+    }
+
+    // ── Calculator ────────────────────────────────────────────────────────────
+
+    function calculate(first, operator, second) {
+      const a = parseFloat(first);
+      const b = parseFloat(second);
+      if (first === '' || isNaN(a)) throw new ValidationError(`"${first}" is not a valid number`);
+      if (second === '' || isNaN(b)) throw new ValidationError(`"${second}" is not a valid number`);
+      if (operator === '/' && b === 0) throw new DivisionByZeroError();
+      switch (operator) {
+        case '+': return a + b;
+        case '-': return a - b;
+        case '*': return a * b;
+        case '/': return a / b;
+        default:  throw new ValidationError(`Unknown operator: ${operator}`);
+      }
+    }
+
+    const form = document.querySelector('form');
     form.addEventListener('submit', e => {
       e.preventDefault();
-      let output = document.querySelector('output');
-      let firstNum = document.querySelector('#first-num').value;
-      let secondNum = document.querySelector('#second-num').value;
-      let operator = document.querySelector('#operator').value;
-      output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+      const output = document.querySelector('output');
+      const firstNum  = document.querySelector('#first-num').value;
+      const secondNum = document.querySelector('#second-num').value;
+      const operator  = document.querySelector('#operator').value;
+
+      try {
+        const result = calculate(firstNum, operator, secondNum);
+        output.textContent = result;
+        output.style.color = 'black';
+      } catch (err) {
+        if (err instanceof ValidationError) {
+          console.error('Validation failed:', err.message);
+          output.textContent = `Validation: ${err.message}`;
+        } else if (err instanceof DivisionByZeroError) {
+          console.error('Math error:', err.message);
+          output.textContent = err.message;
+        } else {
+          console.error('Unexpected error:', err);
+          output.textContent = 'Unexpected error';
+        }
+        output.style.color = 'red';
+      } finally {
+        console.log('Calculation attempted:', firstNum, operator, secondNum);
+      }
     });
 
-    let errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
+    // ── Global Error Handler ──────────────────────────────────────────────────
 
-    // Start your code here
-    // You may move this JS to another file if you wish
+    window.onerror = function (message, source, lineno, colno, error) {
+      console.log(
+        `[Global Error Handler] ${message}\n  at ${source} ${lineno}:${colno}`
+      );
+      return true; // suppresses the default browser error in console
+    };
+
+    // ── Console Demo Buttons ──────────────────────────────────────────────────
+
+    const errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
+
+    const sampleData = [
+      { expression: '10 + 5',  result: 15 },
+      { expression: '9 - 3',   result: 6  },
+      { expression: '4 * 7',   result: 28 },
+      { expression: '20 / 4',  result: 5  },
+    ];
+
+    // Console Log
+    errorBtns[0].addEventListener('click', () => {
+      console.log('Sample calculation data:', sampleData);
+    });
+
+    // Console Error
+    errorBtns[1].addEventListener('click', () => {
+      console.error('Simulated error: failed to fetch calculation history');
+    });
+
+    // Console Count
+    errorBtns[2].addEventListener('click', () => {
+      console.count('Console Count button clicked');
+    });
+
+    // Console Warn
+    errorBtns[3].addEventListener('click', () => {
+      console.warn('Warning: input value is very large, precision may be affected');
+    });
+
+    // Console Assert
+    errorBtns[4].addEventListener('click', () => {
+      const result = calculate('10', '+', '5');
+      console.assert(result === 15, 'Expected 10 + 5 to equal 15');
+      console.assert(result === 99, 'This assertion will fail: 10 + 5 !== 99');
+    });
+
+    // Console Clear
+    errorBtns[5].addEventListener('click', () => {
+      console.clear();
+    });
+
+    // Console Dir
+    errorBtns[6].addEventListener('click', () => {
+      const btn = document.querySelector('#calculate');
+      console.log('console.dir on #calculate button:');
+      console.dir(btn);
+    });
+
+    // Console Dirxml
+    errorBtns[7].addEventListener('click', () => {
+      const fieldset = document.querySelector('fieldset');
+      console.log('console.dirxml on <fieldset>:');
+      console.dirxml(fieldset);
+    });
+
+    // Console Group Start
+    errorBtns[8].addEventListener('click', () => {
+      console.group('Calculation History');
+      sampleData.forEach(entry => {
+        console.log(`${entry.expression} = ${entry.result}`);
+      });
+      console.groupCollapsed('Collapsed sub-group: metadata');
+      console.log('Generated at:', new Date().toISOString());
+      console.log('Entry count:', sampleData.length);
+    });
+
+    // Console Group End
+    errorBtns[9].addEventListener('click', () => {
+      console.groupEnd();
+      console.groupEnd();
+    });
+
+    // Console Table
+    errorBtns[10].addEventListener('click', () => {
+      console.table(sampleData);
+    });
+
+    // Start Timer
+    errorBtns[11].addEventListener('click', () => {
+      console.time('calculation-timer');
+      console.log('Timer started — click "End Timer" to stop it');
+    });
+
+    // End Timer
+    errorBtns[12].addEventListener('click', () => {
+      console.timeEnd('calculation-timer');
+    });
+
+    // Console Trace
+    errorBtns[13].addEventListener('click', () => {
+      function innerFn() { console.trace('Trace from innerFn'); }
+      function outerFn() { innerFn(); }
+      outerFn();
+    });
+
+    // Trigger a Global Error (intentionally uncaught — caught by window.onerror)
+    errorBtns[14].addEventListener('click', () => {
+      undefinedFunction(); // ReferenceError — not in try/catch, goes to window.onerror
+    });
   </script>
 </body>
 
