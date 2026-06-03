@@ -158,12 +158,11 @@
 
     // ── Global Error Handler ──────────────────────────────────────────────────
 
-    window.onerror = function (message, source, lineno, colno, error) {
+    window.addEventListener('error', function (event) {
       console.log(
-        `[Global Error Handler] ${message}\n  at ${source} ${lineno}:${colno}`
+        `[Global Error Handler] ${event.message}\n  at ${event.filename} ${event.lineno}:${event.colno}`
       );
-      return true; // suppresses the default browser error in console
-    };
+    });
 
     // ── Console Demo Buttons ──────────────────────────────────────────────────
 
